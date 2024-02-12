@@ -7,49 +7,6 @@
 
 import Foundation
 
-typealias MatcherBlock = (String) -> [Match]
-
-struct Match {
-    var pattern: String = ""
-    var i: Int = 0
-    var j: Int = 0
-    var token: String = ""
-    var entropy: Float = 0.0
-    var cardinality: Int = 0
-
-    // Dictionary Match
-    var matchedWord: String = ""
-    var dictionaryName: String = ""
-    var rank: Int = 0
-    var baseEntropy: Float = 0.0
-    var upperCaseEntropy: Float = 0.0
-
-    // L33t Match
-    var l33t: Bool = false
-    var sub: [String: String] = [:]
-    var subDisplay: String = ""
-    var l33tEntropy: Float = 0.0
-
-    // Spatial Match
-    var graph: String = ""
-    var turns: Int = 0
-    var shiftedCount: Int = 0
-
-    // Repeat Match
-    var repeatedChar: String = ""
-
-    // Sequence Match
-    var sequenceName: String = ""
-    var sequenceSpace: Int = 0
-    var ascending: Bool = false
-
-    // Date Match
-    var year: Int = 0
-    var month: Int = 0
-    var day: Int = 0
-    var separator: String = ""
-}
-
 struct Matcher {
     private var dictionaryMatchers: [MatcherBlock]
     private var graphs: [String: [String: [String?]]]
