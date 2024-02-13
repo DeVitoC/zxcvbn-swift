@@ -47,8 +47,13 @@ class Scoring {
     let MIN_SUBMATCH_GUESSES_MULTI_CHAR = 50
     let MIN_YEAR_SPACE = 20
     let REFERENCE_YEAR = Calendar.current.component(.year, from: Date())
-
-    func nCk(_ n: Int, _ k: Int) -> Int {
+    
+    /// Implements an n choose k check for the number of ways to choose k elements from a set of n elements
+    /// - Parameters:
+    ///   - n: the total number of elements
+    ///   - k: the number of elements per combination
+    /// - Returns: The int representing the number of total combinations
+    func nChooseK(_ n: Int, _ k: Int) -> Int {
         var n = n
         if k > n {
             return 0
@@ -65,28 +70,21 @@ class Scoring {
         return r
     }
 
-    func log10(_ n: Double) -> Double {
-        return log(n) / log(10)
-    }
-
-    func log2(_ n: Double) -> Double {
-        return log(n) / log(2)
-    }
 
     /// Warning: This method is not optimized. Only run on small factorials.
     /// - Parameter n: The number to calculate the factorial of.
     /// - Returns: The factorial of the given number. Returns Int.max if the number is greater than 20.
 
-    func factorial(_ n: Int) -> Int {
+    func factorial(_ n: Int) -> Double {
         if n < 2 {
             return 1
         }
-        if n > 20 {
-            return Int.max
-        }
-        var f = 1
+        // if n > 20 {
+        //     return Int.max
+        // }
+        var f = 1.0
         for i in 2...n {
-            f *= i
+            f *= Double(i)
         }
         return f
     }
@@ -252,7 +250,7 @@ class Scoring {
         for i in 2...L {
             let possibleTurns = min(t, i - 1)
             for j in 1...possibleTurns {
-                guesses += (nCk(i - 1, j - 1)) * s * Int(pow(d, Double(j)))
+                guesses += (nChooseK(i - 1, j - 1)) * s * Int(pow(d, Double(j)))
             }
         }
         guard let shift = match.shiftedCount else { return guesses }
@@ -262,7 +260,7 @@ class Scoring {
         } else {
             var shiftedVariations = 0
             for i in 1...min(shift, U) {
-                shiftedVariations += nCk(shift + U, i)
+                shiftedVariations += nChooseK(shift + U, i)
             }
             guesses *= shiftedVariations
         }
@@ -300,7 +298,7 @@ class Scoring {
         let L = word.filter { $0.isLowercase }.count
         var variations = 0
         for i in 1...min(U, L) {
-            variations += nCk(U + L, i)
+            variations += nChooseK(U + L, i)
         }
         return variations
     }
@@ -319,7 +317,7 @@ class Scoring {
                 let p = min(U, S)
                 var possibilities = 0
                 for i in 1...p {
-                    possibilities += nCk(U + S, i)
+                    possibilities += nChooseK(U + S, i)
                 }
                 variations *= possibilities
             }
@@ -342,7 +340,7 @@ class Scoring {
         }
         optimal.pi[k][l] = pi
 
-        var g = Double(factorial(l)) * pi
+        var g = factorial(l) * pi
         if !excludeAdditive {
             g += pow(Double(MIN_GUESSES_BEFORE_GROWING_SEQUENCE), Double(l - 1))
         }

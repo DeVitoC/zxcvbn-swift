@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Optimal {
+class Optimal {
     var m: [[Int:Match]]
     var pi: [[Int: Double]]
     var g: [[Int: Double]]
