@@ -59,4 +59,50 @@ class Match {
     // Regex Match
     var regexName: String? = nil
     var regexMatch: String? = nil
+
+    public init(i: Int, j: Int, token: String) {
+        self.i = i
+        self.j = j
+        self.token = token
+    }
+}
+
+extension Match: Equatable {
+    static func == (lhs: Match, rhs: Match) -> Bool {
+        return lhs.pattern == rhs.pattern &&
+            lhs.i == rhs.i &&
+            lhs.j == rhs.j &&
+            lhs.token == rhs.token &&
+            lhs.entropy == rhs.entropy &&
+            lhs.cardinality == rhs.cardinality &&
+            lhs.guesses == rhs.guesses &&
+            lhs.guessesLog10 == rhs.guessesLog10 &&
+            lhs.matchedWord == rhs.matchedWord &&
+            lhs.dictionaryName == rhs.dictionaryName &&
+            lhs.rank == rhs.rank &&
+            lhs.baseEntropy == rhs.baseEntropy &&
+            lhs.upperCaseEntropy == rhs.upperCaseEntropy &&
+            lhs.l33t == rhs.l33t &&
+            lhs.sub == rhs.sub &&
+            lhs.subDisplay == rhs.subDisplay &&
+            lhs.l33tEntropy == rhs.l33tEntropy &&
+            lhs.graph == rhs.graph &&
+            lhs.turns == rhs.turns &&
+            lhs.shiftedCount == rhs.shiftedCount &&
+            lhs.repeatedChar == rhs.repeatedChar &&
+            lhs.repeatCount == rhs.repeatCount &&
+            lhs.sequenceName == rhs.sequenceName &&
+            lhs.sequenceSpace == rhs.sequenceSpace &&
+            lhs.ascending == rhs.ascending &&
+            lhs.year == rhs.year &&
+            lhs.month == rhs.month &&
+            lhs.day == rhs.day &&
+            lhs.separator == rhs.separator &&
+            lhs.baseGuesses == rhs.baseGuesses &&
+            lhs.uppercaseVariations == rhs.uppercaseVariations &&
+            lhs.l33tVariations == rhs.l33tVariations &&
+            lhs.reversed == rhs.reversed &&
+            lhs.regexName == rhs.regexName &&
+            lhs.regexMatch == rhs.regexMatch
+    }
 }
