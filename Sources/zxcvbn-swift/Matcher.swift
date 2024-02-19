@@ -70,7 +70,7 @@ struct Matcher {
                 let subbedPassword = self.translate(password: password, characterMap: sub)
 
                 for matcher in self.dictionaryMatchers {
-                    var matcherMatches = matcher(subbedPassword)
+                    let matcherMatches = matcher(subbedPassword)
                     for index in matcherMatches.indices {
                         let token = String(password[password.index(password.startIndex, offsetBy: matcherMatches[index].i)...password.index(password.startIndex, offsetBy: matcherMatches[index].j)])
                         if token.lowercased() == matcherMatches[index].matchedWord {
@@ -136,11 +136,11 @@ struct Matcher {
                         j = password.index(after: j)
                     } else {
                         if password.distance(from: i, to: j) > 2 {
-                            var match = Match()
+                            let iMatch = password.distance(from: password.startIndex, to: i)
+                            let jMatch = password.distance(from: password.startIndex, to: j) - 1
+                            let tokenMatch = String(password[i..<j])
+                            let match = Match(i: iMatch, j: jMatch, token: tokenMatch)
                             match.pattern = "repeat"
-                            match.i = password.distance(from: password.startIndex, to: i)
-                            match.j = password.distance(from: password.startIndex, to: j) - 1
-                            match.token = String(password[i..<j])
                             match.repeatedChar = String(prevChar)
                             result.append(match)
                         }
@@ -194,11 +194,11 @@ struct Matcher {
                             j = password.index(after: j)
                         } else {
                             if password.distance(from: i, to: j) > 2 {
-                                var match = Match() 
+                                let iMatch = password.distance(from: password.startIndex, to: i)
+                                let jMatch = password.distance(from: password.startIndex, to: j) - 1
+                                let tokenMatch = String(password[i..<j])
+                                let match = Match(i: iMatch, j: jMatch, token: tokenMatch)
                                 match.pattern = "sequence"
-                                match.i = password.distance(from: password.startIndex, to: i)
-                                match.j = password.distance(from: password.startIndex, to: j) - 1
-                                match.token = String(password[i..<j])
                                 match.sequenceName = seqName ?? ""
                                 match.sequenceSpace = seq.count
                                 match.ascending = seqDirection == 1
@@ -374,11 +374,11 @@ struct Matcher {
                     j = password.index(after: j)
                 } else {
                     if password.distance(from: i, to: j) > 2 {
-                        var match = Match()
+                        let iMatch = password.distance(from: password.startIndex, to: i)
+                        let jMatch = password.distance(from: password.startIndex, to: j) - 1
+                        let tokenMatch = String(password[i..<j])
+                        let match = Match(i: iMatch, j: jMatch, token: tokenMatch)
                         match.pattern = "spatial"
-                        match.i = password.distance(from: password.startIndex, to: i)
-                        match.j = password.distance(from: password.startIndex, to: j) - 1
-                        match.token = String(password[i..<j])
                         match.graph = graphName
                         match.turns = turns
                         match.shiftedCount = shiftedCount
@@ -400,11 +400,11 @@ struct Matcher {
         let results = regex.matches(in: password, options: [], range: nsrange)
 
         for result in results {
-            var match = Match()
+            let i = result.range.location
+            let j = result.range.length + i - 1
+            let token = (password as NSString).substring(with: result.range)
+            let match = Match(i: i, j: j, token: token)
             match.pattern = patternName
-            match.i = result.range.location
-            match.j = result.range.length + match.i - 1
-            match.token = (password as NSString).substring(with: result.range)
 
             if patternName == "date" && result.numberOfRanges == 6 {
                 var month: Int
@@ -492,7 +492,7 @@ struct MatchResources {
 
     fileprivate func buildDictMatcher(_ name: String, rankedDict: [String: Int]) -> MatcherBlock {
         return { (password: String) in
-            var matches: [Match] = self.dictionaryMatch(password: password, rankedDict: rankedDict)
+            let matches: [Match] = self.dictionaryMatch(password: password, rankedDict: rankedDict)
 
             for index in matches.indices {
                 matches[index].dictionaryName = name
@@ -514,11 +514,8 @@ struct MatchResources {
                 let range = start...end
                 let word = String(passwordLower[range])
                 if let rank = rankedDict[word] {
-                    var match = Match()
+                    let match = Match(i: i, j: j, token: String(password[range]))
                     match.pattern = "dictionary"
-                    match.i = i
-                    match.j = j
-                    match.token = String(password[range])
                     match.matchedWord = word
                     match.rank = rank
                     result.append(match)

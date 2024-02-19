@@ -358,14 +358,16 @@ class Scoring {
     func bruteforceUpdate(k: Int, optimal: inout Optimal, password: String, excludeAdditive: Bool) {
         let m = makeBruteforceMatch(i: 0, j: k, password: password)
         update(match: m, l: 1, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
-        for i in 1...k {
-            let m = makeBruteforceMatch(i: i, j: k, password: password)
-            for (l, lastM) in optimal.m[i - 1] {
-                let l = l
-                if lastM.pattern == "bruteforce" {
-                    continue
+        if k >= 1 {
+            for i in 1...k {
+                let m = makeBruteforceMatch(i: i, j: k, password: password)
+                for (l, lastM) in optimal.m[i - 1] {
+                    let l = l
+                    if lastM.pattern == "bruteforce" {
+                        continue
+                    }
+                    update(match: m, l: l + 1, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
                 }
-                update(match: m, l: l + 1, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
             }
         }
     }
@@ -374,11 +376,8 @@ class Scoring {
         let startIndex = password.index(password.startIndex, offsetBy: i)
         let endIndex = password.index(password.startIndex, offsetBy: j)
         let token = String(password[startIndex...endIndex])
-        let match = Match()
+        let match = Match(i: i, j: j, token: token)
         match.pattern = "bruteforce"
-        match.token = token
-        match.i = i
-        match.j = j
         return match
     }
 
