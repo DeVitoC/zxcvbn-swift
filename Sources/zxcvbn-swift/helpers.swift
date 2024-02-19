@@ -1,5 +1,3 @@
-
-
 import Foundation
 
 struct Helpers {
@@ -11,7 +9,7 @@ struct Helpers {
         }
 
         do {
-            let json = try JSONSerialization.jsonObject(with: data) as! [String: [String: [String]]]
+            let json = try JSONSerialization.jsonObject(with: data) as! [String: [String: [String?]]]
             return json
         } catch {
             print("Error parsing adjacency graphs: \(error)")
