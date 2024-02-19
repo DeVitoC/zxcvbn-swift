@@ -59,7 +59,7 @@ class Match {
 
     // Regex Match
     var regexName: String? = nil
-    var regexMatch: String? = nil
+    var regexMatch: [String]? = nil
 
     public init(i: Int, j: Int, token: String) {
         self.i = i

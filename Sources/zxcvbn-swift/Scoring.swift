@@ -49,8 +49,8 @@ class Scoring {
     let REFERENCE_YEAR = Calendar.current.component(.year, from: Date())
     let KEYBOARD_AVERAGE_DEGREE: Double!
     let KEYPAD_AVERAGE_DEGREE: Double!
-    let KEYBOARD_STARTING_POSITIONS: Int!
-    let KEYPAD_STARTING_POSITIONS: Int!
+    let KEYBOARD_STARTING_POSITIONS: Double!
+    let KEYPAD_STARTING_POSITIONS: Double!
 
     init() {
         func calcAverageDegree(graph: [String: [String?]]) -> Double {
@@ -64,8 +64,8 @@ class Scoring {
         
         self.KEYBOARD_AVERAGE_DEGREE = calcAverageDegree(graph: adjacencyGraphs["qwerty"]!)
         self.KEYPAD_AVERAGE_DEGREE = calcAverageDegree(graph: adjacencyGraphs["keypad"]!)
-        self.KEYBOARD_STARTING_POSITIONS = adjacencyGraphs["qwerty"]!.count
-        self.KEYPAD_STARTING_POSITIONS = adjacencyGraphs["qwerty"]!.count
+        self.KEYBOARD_STARTING_POSITIONS = Double(adjacencyGraphs["qwerty"]!.count)
+        self.KEYPAD_STARTING_POSITIONS = Double(adjacencyGraphs["qwerty"]!.count)
     }
 
     /// Implements an n choose k check for the number of ways to choose k elements from a set of n elements
@@ -120,19 +120,19 @@ class Scoring {
             matchesByJ[index].sort { $0.i < $1.i }
         }
 
-        var optimal = Optimal(n: n)
+        let optimal = Optimal(n: n)
 
         for k in 0..<n {
             for match in matchesByJ[k] {
                 if match.i > 0 {
                     for (l, _) in optimal.m[match.i - 1] {
-                        update(match: match, l: l + 1, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
+                        update(match: match, l: l + 1, optimal: optimal, password: password, excludeAdditive: excludeAdditive)
                     }
                 } else {
-                    update(match: match, l: 1, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
+                    update(match: match, l: 1, optimal: optimal, password: password, excludeAdditive: excludeAdditive)
                 }
             }
-            bruteforceUpdate(k: k, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
+            bruteforceUpdate(k: k, optimal: optimal, password: password, excludeAdditive: excludeAdditive)
         }
         let optimalMatchSequence = unwind(n: n, optimal: optimal)
         let optimalL = optimalMatchSequence.count
@@ -159,13 +159,13 @@ class Scoring {
         case "dictionary":
             guesses = dictionaryGuesses(match: match)
         case "spatial":
-            guesses = spatialGuesses(match: match)
+            guesses = Int(spatialGuesses(match: match))
         case "repeat":
             guesses = repeatGuesses(match: match)
         case "sequence":
             guesses = sequenceGuesses(match: match)
         case "regex":
-            guesses = regexGuesses(match: match)
+            guesses = Int(regexGuesses(match: match))
         case "date":
             guesses = dateGuesses(match: match)
         default:
@@ -208,7 +208,7 @@ class Scoring {
         return baseGuesses * match.token.count
     }
 
-    func regexGuesses(match: Match) -> Int {
+    func regexGuesses(match: Match) -> Double {
         guard let regexName = match.regexName else { return 0 }
         let charClassBases = [
             "alpha_lower": 26,
@@ -220,10 +220,10 @@ class Scoring {
         ]
         
         if let base = charClassBases[regexName] {
-            return Int(pow(Double(base), Double(match.token.count)))
-        } else if let regexMatch = match.regexMatch, regexName == "recent_year", let firstChar = regexMatch.first, let year = Int(String(firstChar)) {
+            return pow(Double(base), Double(match.token.count))
+        } else if let regexMatch = match.regexMatch, regexName == "recent_year", let firstRegex = regexMatch.first, let year = Int(String(firstRegex)) {
             let yearSpace = max(abs(year - REFERENCE_YEAR), MIN_YEAR_SPACE)
-            return yearSpace
+            return Double(yearSpace)
         }
         return 0
     }
@@ -232,15 +232,14 @@ class Scoring {
         guard let year = match.year else { return 1 }
         let yearSpace = max(abs(year - REFERENCE_YEAR), MIN_YEAR_SPACE)
         var guesses = yearSpace * 365
-        if match.separator != nil {
+        if let separator = match.separator, !separator.isEmpty {
             guesses *= 4
         }
         return guesses
     }
 
-    func spatialGuesses(match: Match) -> Int {
-        // let (s, d): (Int, Double)
-        let s: Int
+    func spatialGuesses(match: Match) -> Double {
+        let s: Double
         let d: Double
         if ["qwerty", "dvorak"].contains(match.graph) {
             s = KEYBOARD_STARTING_POSITIONS
@@ -249,25 +248,26 @@ class Scoring {
             s = KEYPAD_STARTING_POSITIONS
             d = KEYPAD_AVERAGE_DEGREE
         }
-        var guesses = 0
+        var guesses = 0.0
         let L = match.token.count
         guard let t = match.turns else { return guesses }
         for i in 2...L {
             let possibleTurns = min(t, i - 1)
             for j in 1...possibleTurns {
-                guesses += (nChooseK(i - 1, j - 1)) * s * Int(pow(d, Double(j)))
+                guesses += (Double(nChooseK(i - 1, j - 1))) * s * pow(d, Double(j))
             }
         }
-        guard let shift = match.shiftedCount else { return guesses }
-        let U = match.token.count - shift
-        if shift == 0 || U == 0 {
-            guesses *= 2
-        } else {
-            var shiftedVariations = 0
-            for i in 1...min(shift, U) {
-                shiftedVariations += nChooseK(shift + U, i)
+        if let shift = match.shiftedCount {
+            let U = match.token.count - shift
+            if shift == 0 || U == 0 {
+                guesses *= 2
+            } else {
+                var shiftedVariations = 0.0
+                for i in 1...min(shift, U) {
+                    shiftedVariations += Double(nChooseK(shift + U, i))
+                }
+                guesses *= shiftedVariations
             }
-            guesses *= shiftedVariations
         }
         return guesses
     }
@@ -333,17 +333,17 @@ class Scoring {
 
     // MARK: - Helper functions
 
-    func update(match: Match, l: Int, optimal: inout Optimal, password: String, excludeAdditive: Bool) {
+    func update(match: Match, l: Int, optimal: Optimal, password: String, excludeAdditive: Bool) {
         let k = match.j
-        optimal.m[k][l] = match
 
         var pi = Double(estimateGuesses(match: match, password: password))
         if l > 1 {
             if let lastPi = optimal.pi[match.i - 1][l - 1] {
                 pi *= lastPi
-            } 
+            } else {
+                print("No lastPi for \(match.i - 1) \(l - 1)")
+            }
         }
-        optimal.pi[k][l] = pi
 
         var g = factorial(l) * pi
         if !excludeAdditive {
@@ -357,22 +357,25 @@ class Scoring {
                 return
             }
         }
+        optimal.m[k][l] = match
+        optimal.pi[k][l] = pi
         optimal.g[k][l] = g
     }
 
-    func bruteforceUpdate(k: Int, optimal: inout Optimal, password: String, excludeAdditive: Bool) {
-        let m = makeBruteforceMatch(i: 0, j: k, password: password)
-        update(match: m, l: 1, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
-        if k >= 1 {
-            for i in 1...k {
-                let m = makeBruteforceMatch(i: i, j: k, password: password)
-                for (l, lastM) in optimal.m[i - 1] {
-                    let l = l
-                    if lastM.pattern == "bruteforce" {
-                        continue
-                    }
-                    update(match: m, l: l + 1, optimal: &optimal, password: password, excludeAdditive: excludeAdditive)
+    func bruteforceUpdate(k: Int, optimal: Optimal, password: String, excludeAdditive: Bool) {
+        let match = makeBruteforceMatch(i: 0, j: k, password: password)
+        update(match: match, l: 1, optimal: optimal, password: password, excludeAdditive: excludeAdditive)
+        guard k >= 1 else { 
+            print("k is less than 1")
+            return 
+        }
+        for i in 1...k {
+            let bruteForcematch = makeBruteforceMatch(i: i, j: k, password: password)
+            for (l, lastM) in optimal.m[i - 1] {
+                if lastM.pattern == "bruteforce" {
+                    continue
                 }
+                update(match: bruteForcematch, l: l + 1, optimal: optimal, password: password, excludeAdditive: excludeAdditive)
             }
         }
     }
