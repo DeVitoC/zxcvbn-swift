@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Matcher {
+class Matcher {
     private var dictionaryMatchers: [MatcherBlock]
     private var graphs: [String: [String: [String?]]]
     private var matchers: [MatcherBlock] = []
@@ -38,7 +38,7 @@ struct Matcher {
 
     // MARK: - Matching Methods
 
-    mutating func omnimatch(_ password: String, userInputs: [String]) -> [Match] {
+    func omnimatch(_ password: String, userInputs: [String]) -> [Match] {
         if !userInputs.isEmpty {
             var rankedUserInputsDict: [String: Int] = [:]
             for (index, input) in userInputs.enumerated() {

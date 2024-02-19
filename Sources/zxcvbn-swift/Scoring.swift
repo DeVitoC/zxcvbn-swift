@@ -47,7 +47,27 @@ class Scoring {
     let MIN_SUBMATCH_GUESSES_MULTI_CHAR = 50
     let MIN_YEAR_SPACE = 20
     let REFERENCE_YEAR = Calendar.current.component(.year, from: Date())
-    
+    let KEYBOARD_AVERAGE_DEGREE: Double!
+    let KEYPAD_AVERAGE_DEGREE: Double!
+    let KEYBOARD_STARTING_POSITIONS: Int!
+    let KEYPAD_STARTING_POSITIONS: Int!
+
+    init() {
+        func calcAverageDegree(graph: [String: [String?]]) -> Double {
+            var average = 0.0
+            for (_, neighbors) in graph {
+                average += Double(neighbors.compactMap { $0 }.count)
+            }
+            average /= Double(graph.count)
+            return average
+        }
+        
+        self.KEYBOARD_AVERAGE_DEGREE = calcAverageDegree(graph: adjacencyGraphs["qwerty"]!)
+        self.KEYPAD_AVERAGE_DEGREE = calcAverageDegree(graph: adjacencyGraphs["keypad"]!)
+        self.KEYBOARD_STARTING_POSITIONS = adjacencyGraphs["qwerty"]!.count
+        self.KEYPAD_STARTING_POSITIONS = adjacencyGraphs["qwerty"]!.count
+    }
+
     /// Implements an n choose k check for the number of ways to choose k elements from a set of n elements
     /// - Parameters:
     ///   - n: the total number of elements
@@ -87,15 +107,6 @@ class Scoring {
             f *= Double(i)
         }
         return f
-    }
-
-    func calcAverageDegree(graph: [String: [String?]]) -> Double {
-        var average = 0.0
-        for (_, neighbors) in graph {
-            average += Double(neighbors.compactMap { $0 }.count)
-        }
-        average /= Double(graph.count)
-        return average
     }
 
     func mostGuessableMatchSequence(password: String, matches: [Match], excludeAdditive: Bool = false) -> MostGuessableMatchSequenceResult {
@@ -228,12 +239,6 @@ class Scoring {
     }
 
     func spatialGuesses(match: Match) -> Int {
-        let adjacencyGraphs = Helpers.shared.loadAdjacencyGraphs()
-        let KEYBOARD_AVERAGE_DEGREE = calcAverageDegree(graph: adjacencyGraphs["qwerty"]!)
-        let KEYPAD_AVERAGE_DEGREE = calcAverageDegree(graph: adjacencyGraphs["keypad"]!)
-        let KEYBOARD_STARTING_POSITIONS = adjacencyGraphs["qwerty"]!.count
-        let KEYPAD_STARTING_POSITIONS = adjacencyGraphs["keypad"]!.count
-
         // let (s, d): (Int, Double)
         let s: Int
         let d: Double

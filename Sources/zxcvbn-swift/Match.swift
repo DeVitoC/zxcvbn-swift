@@ -38,6 +38,7 @@ class Match {
     // Repeat Match
     var repeatedChar: String? = nil
     var repeatCount: Int? = nil
+    var baseToken: String? = nil
 
     // Sequence Match
     var sequenceName: String? = nil
