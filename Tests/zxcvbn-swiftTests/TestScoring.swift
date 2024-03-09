@@ -9,7 +9,7 @@ func approxEqual(_ actual: Double, _ expected: Double) -> Bool {
     return truncateFloat(actual) == truncateFloat(expected)
 }
 
-final class testScoring: XCTestCase {
+final class TestScoring: XCTestCase {
     var scoring: Scoring!
     let password = "0123456789"
     let excludeAdditive = true
@@ -170,7 +170,9 @@ final class testScoring: XCTestCase {
         ]
 
         for (token, baseToken, repeatCount) in testCases {
-            let baseGuesses = scoring.mostGuessableMatchSequence(password: baseToken, matches: Matching().omnimatch(password: baseToken)).guesses
+            let matches = Matching().omnimatch(password: baseToken)
+            let mostGuessableMatchSequence = scoring.mostGuessableMatchSequence(password: baseToken, matches: matches)
+            let baseGuesses = mostGuessableMatchSequence.guesses
             let match = Match(i: 0, j: 0, token: token)
             match.baseToken = baseToken
             match.baseGuesses = baseGuesses

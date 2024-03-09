@@ -114,6 +114,7 @@ class Scoring {
 
         var matchesByJ = Array(repeating: [Match](), count: n)
         for match in matches {
+            guard match.j < n else { continue }
             matchesByJ[match.j].append(match)
         }
         for index in matchesByJ.indices {
@@ -192,7 +193,7 @@ class Scoring {
     }
 
     func sequenceGuesses(match: Match) -> Double {
-        let firstChar = match.token.first!
+        guard let firstChar = match.token.first else { return 0.0 }
         var baseGuesses: Double
         if ["a", "A", "z", "Z", "0", "1", "9"].contains(firstChar) {
             baseGuesses = 4
