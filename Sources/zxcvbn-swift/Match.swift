@@ -14,19 +14,19 @@ class Match {
     var token: String = ""
     var entropy: Float = 0.0
     var cardinality: Int = 0
-    var guesses: Int? = nil
+    var guesses: Double? = nil
     var guessesLog10: Double? = nil
 
     // Dictionary Match
     var matchedWord: String? = nil
     var dictionaryName: String? = nil
-    var rank: Int? = nil
+    var rank: Double? = nil
     var baseEntropy: Float? = nil
     var upperCaseEntropy: Float? = nil
 
     // L33t Match
     var l33t: Bool? = nil
-    var sub: [String: String]? = nil
+    var sub: [Character: Character]? = nil
     var subDisplay: String? = nil
     var l33tEntropy: Float? = nil
 
@@ -37,8 +37,9 @@ class Match {
 
     // Repeat Match
     var repeatedChar: String? = nil
-    var repeatCount: Int? = nil
+    var repeatCount: Double? = nil
     var baseToken: String? = nil
+    var baseMatches: [Match]? = nil
 
     // Sequence Match
     var sequenceName: String? = nil
@@ -52,9 +53,9 @@ class Match {
     var separator: String? = nil
 
     // Dictionary Guesses
-    var baseGuesses: Int? = nil
-    var uppercaseVariations: Int? = nil
-    var l33tVariations: Int? = nil
+    var baseGuesses: Double? = nil
+    var uppercaseVariations: Double? = nil
+    var l33tVariations: Double? = nil
     var reversed: Bool? = nil
 
     // Regex Match

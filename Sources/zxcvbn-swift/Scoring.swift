@@ -1,5 +1,5 @@
 //
-//  Matcher.swift
+// Scoring.swift
 //
 //
 //  Created by Christopher DeVito on 2/11/24.
@@ -73,7 +73,7 @@ class Scoring {
     ///   - n: the total number of elements
     ///   - k: the number of elements per combination
     /// - Returns: The int representing the number of total combinations
-    func nChooseK(_ n: Int, _ k: Int) -> Int {
+    func nChooseK(_ n: Double, _ k: Double) -> Double {
         var n = n
         if k > n {
             return 0
@@ -81,10 +81,10 @@ class Scoring {
         if k == 0 {
             return 1
         }
-        var r = 1
-        for d in 1...k {
+        var r: Double = 1
+        for d in 1...Int(k) {
             r *= n
-            r /= d
+            r /= Double(d)
             n -= 1
         }
         return r
@@ -145,27 +145,27 @@ class Scoring {
         return MostGuessableMatchSequenceResult(password: password, guesses: guesses, guessesLog10: log10(guesses), sequence: optimalMatchSequence) 
     }
 
-    func estimateGuesses(match: Match, password: String) -> Int {
+    func estimateGuesses(match: Match, password: String) -> Double {
         guard match.guesses == nil else { return match.guesses! }
-        var minGuesses = 1
+        var minGuesses: Double = 1
         if match.token.count < password.count {
-            minGuesses = match.token.count == 1 ? MIN_SUBMATCH_GUESSES_SINGLE_CHAR : MIN_SUBMATCH_GUESSES_MULTI_CHAR
+            minGuesses = match.token.count == 1 ? Double(MIN_SUBMATCH_GUESSES_SINGLE_CHAR) : Double(MIN_SUBMATCH_GUESSES_MULTI_CHAR)
         }
 
-        let guesses: Int
+        let guesses: Double
         switch match.pattern {
         case "bruteforce":
             guesses = bruteforceGuesses(match: match)
         case "dictionary":
             guesses = dictionaryGuesses(match: match)
         case "spatial":
-            guesses = Int(spatialGuesses(match: match))
+            guesses = spatialGuesses(match: match)
         case "repeat":
             guesses = repeatGuesses(match: match)
         case "sequence":
             guesses = sequenceGuesses(match: match)
         case "regex":
-            guesses = Int(regexGuesses(match: match))
+            guesses = regexGuesses(match: match)
         case "date":
             guesses = dateGuesses(match: match)
         default:
@@ -177,23 +177,23 @@ class Scoring {
         return match.guesses!
     }
 
-    func bruteforceGuesses(match: Match) -> Int {
+    func bruteforceGuesses(match: Match) -> Double {
         var guesses = Double(pow(Double(BRUTEFORCE_CARDINALITY), Double(match.token.count)))
         if guesses == Double.infinity {
             guesses = Double.greatestFiniteMagnitude
         }
-        let minGuesses = match.token.count == 1 ? MIN_SUBMATCH_GUESSES_SINGLE_CHAR + 1 : MIN_SUBMATCH_GUESSES_MULTI_CHAR + 1
-        return max(Int(guesses), minGuesses)    
+        let minGuesses: Double = match.token.count == 1 ? Double(MIN_SUBMATCH_GUESSES_SINGLE_CHAR + 1) : Double(MIN_SUBMATCH_GUESSES_MULTI_CHAR + 1)
+        return max(guesses, minGuesses)
     }
 
-    func repeatGuesses(match: Match) -> Int {
+    func repeatGuesses(match: Match) -> Double {
         guard let baseGuesses = match.baseGuesses, let repeatCount = match.repeatCount else { return 1 }
         return baseGuesses * repeatCount
     }
 
-    func sequenceGuesses(match: Match) -> Int {
+    func sequenceGuesses(match: Match) -> Double {
         let firstChar = match.token.first!
-        var baseGuesses: Int
+        var baseGuesses: Double
         if ["a", "A", "z", "Z", "0", "1", "9"].contains(firstChar) {
             baseGuesses = 4
         } else if firstChar.isNumber {
@@ -201,11 +201,11 @@ class Scoring {
         } else {
             baseGuesses = 26
         }
-        guard let ascending = match.ascending else { return baseGuesses * match.token.count }
+        guard let ascending = match.ascending else { return baseGuesses * Double(match.token.count) }
         if !ascending {
             baseGuesses *= 2
         }
-        return baseGuesses * match.token.count
+        return baseGuesses * Double(match.token.count)
     }
 
     func regexGuesses(match: Match) -> Double {
@@ -228,10 +228,10 @@ class Scoring {
         return 0
     }
 
-    func dateGuesses(match: Match) -> Int {
+    func dateGuesses(match: Match) -> Double {
         guard let year = match.year else { return 1 }
         let yearSpace = max(abs(year - REFERENCE_YEAR), MIN_YEAR_SPACE)
-        var guesses = yearSpace * 365
+        var guesses: Double = Double(yearSpace * 365)
         if let separator = match.separator, !separator.isEmpty {
             guesses *= 4
         }
@@ -254,7 +254,7 @@ class Scoring {
         for i in 2...L {
             let possibleTurns = min(t, i - 1)
             for j in 1...possibleTurns {
-                guesses += (Double(nChooseK(i - 1, j - 1))) * s * pow(d, Double(j))
+                guesses += (Double(nChooseK(Double(i - 1), Double(j - 1)))) * s * pow(d, Double(j))
             }
         }
         if let shift = match.shiftedCount {
@@ -264,7 +264,7 @@ class Scoring {
             } else {
                 var shiftedVariations = 0.0
                 for i in 1...min(shift, U) {
-                    shiftedVariations += Double(nChooseK(shift + U, i))
+                    shiftedVariations += Double(nChooseK(Double(shift + U), Double(i)))
                 }
                 guesses *= shiftedVariations
             }
@@ -272,17 +272,17 @@ class Scoring {
         return guesses
     }
 
-    func dictionaryGuesses(match: Match) -> Int {
+    func dictionaryGuesses(match: Match) -> Double {
         guard let rank = match.rank, let reversed = match.reversed else { return 1 }
-        match.baseGuesses = rank // keep these as properties for display purposes
+        match.baseGuesses = Double(rank) // keep these as properties for display purposes
         match.uppercaseVariations = uppercaseVariations(match: match)
         match.l33tVariations = l33tVariations(match: match)
         let reversedVariations = reversed ? 2 : 1
 
-        return match.baseGuesses! * match.uppercaseVariations! * match.l33tVariations! * reversedVariations
+        return match.baseGuesses! * match.uppercaseVariations! * match.l33tVariations! * Double(reversedVariations)
     }
 
-    func uppercaseVariations(match: Match) -> Int {
+    func uppercaseVariations(match: Match) -> Double {
         let word = match.token
         let START_UPPER = "^[A-Z][^A-Z]+$"
         let END_UPPER = "^[^A-Z]+[A-Z]$"
@@ -301,28 +301,28 @@ class Scoring {
         }
         let U = word.filter { $0.isUppercase }.count
         let L = word.filter { $0.isLowercase }.count
-        var variations = 0
+        var variations: Double = 0
         for i in 1...min(U, L) {
-            variations += nChooseK(U + L, i)
+            variations += nChooseK(Double(U + L), Double(i))
         }
         return variations
     }
 
-    func l33tVariations(match: Match) -> Int {
-        var variations = 1
+    func l33tVariations(match: Match) -> Double {
+        var variations: Double = 1.0
         guard let l33t = match.l33t, l33t, let sub = match.sub else { return variations }
 
         for (subbed, unsubbed) in sub {
             let chrs = Array(match.token.lowercased())
-            let S = chrs.filter { String($0) == subbed }.count
-            let U = chrs.filter { String($0) == unsubbed }.count
+            let S = chrs.filter { $0 == subbed }.count
+            let U = chrs.filter { $0 == unsubbed }.count
             if S == 0 || U == 0 {
                 variations *= 2
             } else {
                 let p = min(U, S)
-                var possibilities = 0
+                var possibilities: Double = 0
                 for i in 1...p {
-                    possibilities += nChooseK(U + S, i)
+                    possibilities += nChooseK(Double(U + S), Double(i))
                 }
                 variations *= possibilities
             }

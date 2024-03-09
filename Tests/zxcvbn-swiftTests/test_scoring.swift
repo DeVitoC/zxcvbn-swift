@@ -21,7 +21,7 @@ final class testScoring: XCTestCase {
     }
     func testNChoosek() {
         let nChooseK = scoring.nChooseK
-        let testCases = [
+        let testCases: [(n: Double, k: Double, result: Double)] = [
             (n: 0, k: 0, result: 1),
             (n: 1, k: 0, result: 1),
             (n: 5, k: 0, result: 1),
@@ -36,8 +36,8 @@ final class testScoring: XCTestCase {
             XCTAssertEqual(nChooseK(testCase.n, testCase.k), testCase.result, "nChoosek(\(testCase.n), \(testCase.k)) == \(testCase.result)")
         }
 
-        let n = 49
-        let k = 12
+        let n: Double = 49
+        let k: Double = 12
         XCTAssertEqual(nChooseK(n, k), nChooseK(n, n-k), "mirror identity")
         XCTAssertEqual(nChooseK(n, k), nChooseK(n-1, k-1) + nChooseK(n-1, k), "pascal's triangle identity")
     }
@@ -161,7 +161,7 @@ final class testScoring: XCTestCase {
     }
 
     func testRepeatGuesses() {
-        let testCases = [
+        let testCases: [(String, String, Double)] = [
             ("aa", "a", 2),
             ("999", "9", 3),
             ("$$$$", "$", 4),
@@ -170,18 +170,18 @@ final class testScoring: XCTestCase {
         ]
 
         for (token, baseToken, repeatCount) in testCases {
-            let baseGuesses = scoring.mostGuessableMatchSequence(password: baseToken, matches: Matcher().omnimatch(baseToken, userInputs: [])).guesses
+            let baseGuesses = scoring.mostGuessableMatchSequence(password: baseToken, matches: Matching().omnimatch(password: baseToken)).guesses
             let match = Match(i: 0, j: 0, token: token)
             match.baseToken = baseToken
-            match.baseGuesses = Int(baseGuesses)
+            match.baseGuesses = baseGuesses
             match.repeatCount = repeatCount
-            let expectedGuesses = Int(baseGuesses) * repeatCount
+            let expectedGuesses = baseGuesses * repeatCount
             XCTAssertEqual(scoring.repeatGuesses(match: match), expectedGuesses, "the repeat pattern '\(token)' has guesses of \(expectedGuesses)")
         }
     }
 
     func testSequenceGuesses() {
-        let testCases = [
+        let testCases: [(String, Bool, Double)] = [
             ("ab",   true,  4 * 2),      // obvious start * len-2
             ("XYZ",  true,  26 * 3),     // base26 * len-3
             ("4567", true,  10 * 4),     // base10 * len-4
@@ -229,7 +229,7 @@ final class testScoring: XCTestCase {
        match.month = 1
        match.day = 1
 
-       var expectedGuesses = 365 * abs(scoring.REFERENCE_YEAR - match.year!)
+       var expectedGuesses: Double = Double(365 * abs(scoring.REFERENCE_YEAR - match.year!))
        XCTAssertEqual(scoring.dateGuesses(match: match), expectedGuesses, "guesses for \(match.token) is 365 * distance_from_ref_year")
 
        match.token = "1/1/2010"
@@ -237,7 +237,7 @@ final class testScoring: XCTestCase {
        match.year = 2010
        match.month = 1
        match.day = 1
-       expectedGuesses = 365 * scoring.MIN_YEAR_SPACE * 4
+       expectedGuesses = Double(365 * scoring.MIN_YEAR_SPACE * 4)
        XCTAssertEqual(scoring.dateGuesses(match: match), expectedGuesses, "recent years assume MIN_YEAR_SPACE. extra guesses are added for separators.")
    }
 
@@ -271,7 +271,7 @@ final class testScoring: XCTestCase {
    }
 
     func testUppercaseVariants() {
-        let testCases: [(String, Int)] = [
+        let testCases: [(String, Double)] = [
             ("", 1),
             ("a", 1),
             ("A", 2),
@@ -295,7 +295,7 @@ final class testScoring: XCTestCase {
     }
 
     func testL33tVariants() {
-        let testCases = [
+        let testCases: [(String, Double, [Character: Character])] = [
             ("", 1, [:]),
             ("a", 1, [:]),
             ("4", 2, ["4": "a"]),
