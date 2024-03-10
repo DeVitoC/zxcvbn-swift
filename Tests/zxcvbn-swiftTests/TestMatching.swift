@@ -63,6 +63,28 @@ final class TestMatching: XCTestCase {
                         let kPropList = (propList[k] as? [Character: Character]) ?? [:]
                         let matchSub = match.sub ?? [:]
                         XCTAssertEqual(matchSub, kPropList, msg)
+                    case "graph":
+                        XCTAssertEqual(match.graph, propList[k] as? String, msg)
+                    case "turns":
+                        XCTAssertEqual(match.turns, propList[k] as? Int, msg)
+                    case "shifted_count":
+                        XCTAssertEqual(match.shiftedCount, propList[k] as? Int, msg)
+                    case "ascending":
+                        XCTAssertEqual(match.ascending, propList[k] as? Bool, msg)
+                    case "sequenceName":
+                        XCTAssertEqual(match.sequenceName, propList[k] as? String, msg)
+                    case "baseToken":
+                        XCTAssertEqual(match.baseToken, propList[k] as? String, msg)
+                    case "separator":
+                        XCTAssertEqual(match.separator, (propList[k] as? String), msg)
+                    case "regexName":
+                        XCTAssertEqual(match.regexName, propList[k] as? String, msg)
+                    case "year":
+                        XCTAssertEqual(match.year, propList[k] as? Int, msg)
+                    case "month":
+                        XCTAssertEqual(match.month, propList[k] as? Int, msg)
+                    case "day":
+                        XCTAssertEqual(match.day, propList[k] as? Int, msg)
                     default:
                         break
                 }
@@ -328,7 +350,7 @@ final class TestMatching: XCTestCase {
             [
                 "graph": ["qwerty"],
                 "turns": [2],
-                "shifted_count": [3]
+                "shiftedCount": [3]
             ]
         )
 
@@ -362,7 +384,7 @@ final class TestMatching: XCTestCase {
                 [
                     "graph": [keyboard],
                     "turns": [turns],
-                    "shifted_count": [shifts]
+                    "shiftedCount": [shifts]
                 ]
             )
         }
@@ -402,7 +424,7 @@ final class TestMatching: XCTestCase {
                 [pattern],
                 [(i, j)],
                 [
-                    "sequence_name": ["lower"],
+                    "sequenceName": ["lower"],
                     "ascending": [false]
                 ]
             )
@@ -434,46 +456,354 @@ final class TestMatching: XCTestCase {
                 [pattern],
                 [(0, pattern.count - 1)],
                 [
-                    "sequence_name": [name],
+                    "sequenceName": [name],
                     "ascending": [isAscending]
                 ]
             )
         }
     }
 
-//    func testRepeatMatching() {
-//        for password in ["", "#"] {
-//            let msg = "doesn't match length-\(password.count) repeat patterns"
-//            XCTAssertEqual(Matching.repeatMatch(password), [], msg)
-//        }
-//
-//        // test single-character repeats
-//        let prefixes = ["@", "y4@"]
-//        let suffixes = ["u", "u%7"]
-//        let pattern = "&&&&&"
-//        for password in genpws(pattern, prefixes, suffixes) {
-//            let matches = Matching.repeatMatch(password)
-//            let msg = "matches embedded repeat patterns"
-//            checkMatches(msg, matches, .repeat, [pattern], [[password.i, password.j]], [
-//                "base_token": ["&"]
-//            ])
-//        }
-//
-//        for length in [3, 12] {
-//            for chr in ["a", "Z", "4", "&"] {
-//                let pattern = String(repeating: chr, count: length + 1)
-//                let matches = Matching.repeatMatch(pattern)
-//                let msg = "matches repeats with base character '\(chr)'"
-//                checkMatches(msg, matches, .repeat, [pattern], [[0, pattern.count - 1]], [
-//                    "base_token": [String(chr)]
-//                ])
-//            }
-//        }
-//
-//        let matches = Matching.repeatMatch("BBB1111aaaaa@@@@@@")
-//        let patterns = ["BBB", "1111", "aaaaa", "@@@@@@"]
-//        let msg = "matches multiple adjacent repeats"
-////        checkMatches(msg, matches, .repeat, patterns, [[0, 2], [3, 6], [
-//
-//    }
+    func testRepeatMatching() {
+        // Test empty and single-character passwords
+        let emptyAndSingleCharPasswords = ["", "#"]
+        for password in emptyAndSingleCharPasswords {
+            XCTAssertTrue(matching.repeatMatch(password: password, rankedDictionaries: matching.rankedDictionaries).isEmpty, "doesn't match length-\(password.count) repeat patterns")
+        }
+
+        // Test single-character repeats with prefixes and suffixes
+        let prefixes = ["@", "y4@"]
+        let suffixes = ["u", "u%7"]
+        let pattern = "&&&&&"
+        for (password, i, j) in genpws(pattern: pattern, prefixes: prefixes, suffixes: suffixes) {
+            let matches = matching.repeatMatch(password: password, rankedDictionaries: matching.rankedDictionaries)
+            let msg = "matches embedded repeat patterns"
+            checkMatches(
+                msg,
+                matches,
+                "repeat",
+                [pattern],
+                [(i, j)],
+                [
+                    "baseToken": ["&"]
+                ]
+            )
+        }
+
+        // Test repeats with different base characters and lengths
+        for length in [3, 12] {
+            for chr in ["a", "Z", "4", "&"] {
+                let pattern = String(repeating: chr, count: length + 1)
+                let matches = matching.repeatMatch(password: pattern, rankedDictionaries: matching.rankedDictionaries)
+                let msg = "matches repeats with base character '\(chr)'"
+                checkMatches(
+                    msg,
+                    matches,
+                    "repeat",
+                    [pattern],
+                    [(0, pattern.count - 1)],
+                    [
+                        "baseToken": [chr]
+                    ]
+                )
+            }
+        }
+
+        // Test multiple adjacent repeats
+        let multiplePatternsPassword = "BBB1111aaaaa@@@@@@"
+        let patterns = ["BBB", "1111", "aaaaa", "@@@@@@"]
+        let matches = matching.repeatMatch(password: multiplePatternsPassword, rankedDictionaries: matching.rankedDictionaries)
+        let msg = "matches multiple adjacent repeats"
+        checkMatches(
+            msg,
+            matches,
+            "repeat",
+            patterns,
+            [(0, 2), (3, 6), (7, 11), (12, 17)],
+            [
+                "baseToken": ["B", "1", "a", "@"]
+            ]
+        )
+
+        // Test multiple repeats with non-repeats in-between
+        let complexPassword = "2818BBBbzsdf1111@*&@!aaaaaEUDA@@@@@@1729"
+        let matches2 = matching.repeatMatch(password: complexPassword, rankedDictionaries: matching.rankedDictionaries)
+        let msg2 = "matches multiple repeats with non-repeats in-between"
+        checkMatches(
+            msg2,
+            matches2,
+            "repeat",
+            patterns,
+            [(4, 6), (12, 15), (21, 25), (30, 35)],
+            [
+                "baseToken": ["B", "1", "a", "@"]
+            ]
+        )
+
+        // Test multi-character repeats
+        let multiCharPattern = "abab"
+        let matches3 = matching.repeatMatch(password: multiCharPattern, rankedDictionaries: matching.rankedDictionaries)
+        let msg3 = "matches multi-character repeat pattern"
+        checkMatches(
+            msg3,
+            matches3,
+            "repeat",
+            [multiCharPattern],
+            [(0, multiCharPattern.count - 1)],
+            [
+                "baseToken": ["ab"]
+            ]
+        )
+
+        let aabPattern = "aabaab"
+        let matches4 = matching.repeatMatch(password: aabPattern, rankedDictionaries: matching.rankedDictionaries)
+        let msg4 = "matches aabaab as a repeat instead of the aa prefix"
+        checkMatches(
+            msg4,
+            matches4,
+            "repeat",
+            [aabPattern],
+            [(0, aabPattern.count - 1)],
+            [
+                "baseToken": ["aab"]
+            ]
+        )
+
+        let abPattern = "abababab"
+        let matches5 = matching.repeatMatch(password: abPattern, rankedDictionaries: matching.rankedDictionaries)
+        let msg5 = "identifies ab as repeat string, even though abab is also repeated"
+        checkMatches(
+            msg5,
+            matches5,
+            "repeat",
+            [abPattern],
+            [(0, abPattern.count - 1)],
+            [
+                "baseToken": ["ab"]
+            ]
+        )
+    }
+
+    func testRegexMatching() {
+        let testCases = [
+            ("1922", "recentYear"),
+            ("2017", "recentYear")
+        ]
+
+        for (pattern, name) in testCases {
+            let matches = matching.regexMatch(password: pattern, rankedDictionaries: matching.rankedDictionaries)
+            let msg = "matches \(pattern) as a \(name) pattern"
+            checkMatches(
+                msg,
+                matches,
+                "regex",
+                [pattern],
+                [(0, pattern.count - 1)],
+                [
+                    "regexName": [name]
+                ]
+            )
+        }
+    }
+
+    func testDateMatching() {
+        // Test dates with different separators
+        let separators = ["", " ", "-", "/", "\\", "_", "."]
+        for sep in separators {
+            let password = "13\(sep)2\(sep)1921"
+            let matches = matching.dateMatch(password: password, rankedDictionaries: matching.rankedDictionaries)
+            let msg = "matches dates that use '\(sep)' as a separator"
+            checkMatches(
+                msg,
+                matches,
+                "date",
+                [password],
+                [(0, password.count - 1)],
+                [
+                    "separator": [sep],
+                    "year": [1921],
+                    "month": [2],
+                    "day": [13]
+                ]
+            )
+        }
+
+        // Test dates with different order formats
+        let orders = ["mdy", "dmy", "ymd", "ydm"]
+        for order in orders {
+            let d = 8, m = 8, y = 88
+            let password = order.replacingOccurrences(of: "y", with: "\(y)").replacingOccurrences(of: "m", with: "\(m)").replacingOccurrences(of: "d", with: "\(d)")
+            let matches = matching.dateMatch(password: password, rankedDictionaries: matching.rankedDictionaries)
+            let msg = "matches dates with '\(order)' format"
+            checkMatches(
+                msg,
+                matches,
+                "date",
+                [password],
+                [(0, password.count - 1)],
+                [
+                    "separator": [""],
+                    "year": [1988],
+                    "month": [8],
+                    "day": [8]
+                ]
+            )
+        }
+
+        // Test ambiguous dates
+        let password = "111504"
+        let matches = matching.dateMatch(password: password, rankedDictionaries: matching.rankedDictionaries)
+        let msg = "matches the date with year closest to REFERENCE_YEAR when ambiguous"
+        checkMatches(
+            msg,
+            matches,
+            "date",
+            [password],
+            [(0, password.count - 1)],
+            [
+                "separator": [""],
+                "year": [2004], // Picks '04' -> 2004 as year, not '1504'
+                "month": [11],
+                "day": [15]
+            ]
+        )
+
+        // Test various date formats
+        let dateFormats = [
+            (1, 1, 1999),
+            (11, 8, 2000),
+            (9, 12, 2005),
+            (22, 11, 1551)
+        ]
+        for (day, month, year) in dateFormats {
+            let passwordWithoutSeparator = "\(year)\(month)\(day)"
+            let matches = matching.dateMatch(password: passwordWithoutSeparator, rankedDictionaries: matching.rankedDictionaries)
+            let msg = "matches \(passwordWithoutSeparator)"
+            checkMatches(
+                msg,
+                matches,
+                "date",
+                [passwordWithoutSeparator],
+                [(0, passwordWithoutSeparator.count - 1)],
+                [
+                    "separator": [""],
+                    "year": [year]
+                ]
+            )
+
+            let passwordWithSeparator = "\(year).\(month).\(day)"
+            let matches2 = matching.dateMatch(password: passwordWithSeparator, rankedDictionaries: matching.rankedDictionaries)
+            let msg2 = "matches \(passwordWithSeparator)"
+            checkMatches(
+                msg2,
+                matches2,
+                "date",
+                [passwordWithSeparator],
+                [(0, passwordWithSeparator.count - 1)],
+                [
+                    "separator": ["."],
+                    "year": [year]
+                ]
+            )
+        }
+
+        // Test zero-padded dates
+        let zeroPaddedPassword = "02/02/02"
+        let matches2 = matching.dateMatch(password: zeroPaddedPassword, rankedDictionaries: matching.rankedDictionaries)
+        let msg2 = "matches zero-padded dates"
+        checkMatches(
+            msg2,
+            matches2,
+            "date",
+            [zeroPaddedPassword],
+            [(0, zeroPaddedPassword.count - 1)],
+            [
+                "separator": ["/"],
+                "year": [2002],
+                "month": [2],
+                "day": [2]
+            ]
+        )
+
+        // Test embedded dates
+        let prefixes = ["a", "ab"]
+        let suffixes = ["!"]
+        let pattern = "1/1/91"
+        for (password, i, j) in genpws(pattern: pattern, prefixes: prefixes, suffixes: suffixes) {
+            let matches = matching.dateMatch(password: password, rankedDictionaries: matching.rankedDictionaries)
+            let msg = "matches embedded dates"
+            checkMatches(
+                msg,
+                matches,
+                "date",
+                [pattern],
+                [(i, j)],
+                [
+                    "year": [1991],
+                    "month": [1],
+                    "day": [1]
+                ]
+            )
+        }
+
+        // Test overlapping dates
+        let overlapPassword = "12/20/1991.12.20"
+        let matches3 = matching.dateMatch(password: overlapPassword, rankedDictionaries: matching.rankedDictionaries)
+        let msg3 = "matches overlapping dates"
+        checkMatches(
+            msg3,
+            matches3,
+            "date",
+            ["12/20/1991", "1991.12.20"],
+            [(0, 9), (6, 15)],
+            [
+                "separator": ["/", "."],
+                "year": [1991, 1991],
+                "month": [12, 12],
+                "day": [20, 20]
+            ]
+        )
+
+        // Test dates padded by non-ambiguous digits
+        let paddedPassword = "912/20/919"
+        let matches4 = matching.dateMatch(password: paddedPassword, rankedDictionaries: matching.rankedDictionaries)
+        let msg4 = "matches dates padded by non-ambiguous digits"
+        checkMatches(
+            msg4,
+            matches4,
+            "date",
+            ["12/20/91"],
+            [(1, 8)],
+            [
+                "separator": ["/"],
+                "year": [1991],
+                "month": [12],
+                "day": [20]
+            ]
+        )
+    }
+
+    func testOmnimatch() {
+        XCTAssertTrue(matching.omnimatch(password: "") == [], "Doesn't match ''")
+
+        let password = "r0sebudmaelstrom11/20/91aaaa"
+        let matches = matching.omnimatch(password: password)
+
+        let testCases: [(String, (Int, Int))] = [
+            ("dictionary", (0, 6)),
+            ("dictionary", (7, 15)),
+            ("date", (16, 23)),
+            ("repeat", (24, 27))
+        ]
+
+        for (patternName, (i, j)) in testCases {
+            var included = false
+            for match in matches {
+                if match.i == i && match.j == j && match.pattern == match.pattern {
+                    included = true
+                }
+            }
+            let msg = "for \(password), matches a \(patternName) pattern at (\(i), \(j))"
+            XCTAssertTrue(included, msg)
+        }
+    }
 }

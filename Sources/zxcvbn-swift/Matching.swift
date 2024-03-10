@@ -154,11 +154,23 @@ class Matching {
         let lazyAnchoredPattern = try? NSRegularExpression(pattern: "^(.+?)\\1+$", options: [])
 
         var matches: [Match] = []
-        var lastIndex = password.startIndex
+        var lastPos = 0
 
-        while lastIndex < password.endIndex {
-            let greedyMatch = greedyPattern?.firstMatch(in: password, options: [], range: NSRange(location: password.distance(from: password.startIndex, to: lastIndex), length: password.count - password.distance(from: password.startIndex, to: lastIndex)))
-            let lazyMatch = lazyPattern?.firstMatch(in: password, options: [], range: NSRange(location: password.distance(from: password.startIndex, to: lastIndex), length: password.count - password.distance(from: password.startIndex, to: lastIndex)))
+        while lastPos < password.count {
+            let greedyMatch = greedyPattern?.firstMatch(
+                in: password,
+                range: NSRange(
+                    location: lastPos,
+                    length: password.count - lastPos
+                )
+            )
+            let lazyMatch = lazyPattern?.firstMatch(
+                in: password,
+                range: NSRange(
+                    location: lastPos,
+                    length: password.count - lastPos
+                )
+            )
 
             if greedyMatch == nil {
                 break
@@ -184,8 +196,8 @@ class Matching {
                 baseToken = String(password[lazyMatchRange])
             }
 
-            let i = password.distance(from: password.startIndex, to: matchRange.lowerBound)
-            let j = password.distance(from: password.startIndex, to: matchRange.upperBound) - 1
+            let i = matchRange.lowerBound.utf16Offset(in: password)
+            let j = matchRange.upperBound.utf16Offset(in: password) - 1
             let token = String(password[matchRange])
             
             let omniMatchResult = omnimatch(password: baseToken)
@@ -203,8 +215,8 @@ class Matching {
             match.repeatCount = repeatCount
             
             matches.append(match)
-
-            lastIndex = password.index(after: password.index(password.startIndex, offsetBy: j + 1))
+            
+            lastPos = j + 1
         }
 
         return matches
@@ -302,57 +314,79 @@ class Matching {
         for i in 0..<(password.count - 3) {
             for j in (i + 3)..<min(i + 8, password.count) {
                 let token = String(password[password.index(password.startIndex, offsetBy: i)..<password.index(password.startIndex, offsetBy: j + 1)])
-                if let maybeDateNoSeparatorPattern = maybeDateNoSeparatorPattern,
-                   maybeDateNoSeparatorPattern.numberOfMatches(in: token, options: [], range: NSRange(location: 0, length: token.count)) > 0 {
-                    var candidates: [DateComponents] = []
-                    for (k, l) in matchingHelpers.dateSplits[token.count] ?? [] {
-                        let startToK = Int(token[token.startIndex..<token.index(token.startIndex, offsetBy: k)]) ?? 0
-                        let kTo1 = Int(token[token.index(token.startIndex, offsetBy: k)..<token.index(token.startIndex, offsetBy: l)]) ?? 0
-                        let tokenMinusFirst = Int(token[token.index(token.startIndex, offsetBy: l)..<token.endIndex]) ?? 0
-                        if let dmy = matchingHelpers.mapIntsToDateComponents([
-                            startToK,
-                            kTo1,
-                            tokenMinusFirst
-                        ]) {
-                            candidates.append(dmy)
-                        }
-                    }
 
-                    if !candidates.isEmpty {
-                        let bestCandidate = candidates.min(by: { abs($0.year ?? 0 - matchingHelpers.referenceYear) < abs($1.year ?? 0 - matchingHelpers.referenceYear) })
-                        if let bestCandidate = bestCandidate {
-                            let match = Match(i: i, j: j, token: token)
-                            match.pattern = "date"
-                            match.separator = nil
-                            match.year = bestCandidate.year
-                            match.month = bestCandidate.month
-                            match.day = bestCandidate.day
-                            matches.append(match)
-                        }
+                guard let maybeDateNoSeparatorPattern = maybeDateNoSeparatorPattern, 
+                        maybeDateNoSeparatorPattern.numberOfMatches(
+                            in: token,
+                            options: [],
+                            range: NSRange(location: 0, length: token.count)
+                        ) > 0 else { continue }
+
+                var candidates: [DateComponents] = []
+                for (k, l) in matchingHelpers.dateSplits[token.count] ?? [] {
+                    let startToK = Int(token[token.startIndex..<token.index(token.startIndex, offsetBy: k)]) ?? 0
+                    let kTo1 = Int(token[token.index(token.startIndex, offsetBy: k)..<token.index(token.startIndex, offsetBy: l)]) ?? 0
+                    let tokenMinusFirst = Int(token[token.index(token.startIndex, offsetBy: l)..<token.endIndex]) ?? 0
+                    if let dmy = matchingHelpers.mapIntsToDateComponents([
+                        startToK,
+                        kTo1,
+                        tokenMinusFirst
+                    ]) {
+                        candidates.append(dmy)
                     }
                 }
+
+                if candidates.isEmpty {
+                    continue
+                }
+
+                func metric(_ candidate: DateComponents) -> Int {
+                    guard let year = candidate.year else { return 0 }
+                    return abs(year - matchingHelpers.referenceYear)
+                }
+
+                var bestCandidate = candidates[0]
+                var minDistance = metric(bestCandidate)
+
+                for candidate in candidates.dropFirst() {
+                    let distance = metric(candidate)
+                    if distance < minDistance {
+                        bestCandidate = candidate
+                        minDistance = distance
+                    }
+                }
+
+                let match = Match(i: i, j: j, token: token)
+                match.pattern = "date"
+                match.separator = ""
+                match.year = bestCandidate.year
+                match.month = bestCandidate.month
+                match.day = bestCandidate.day
+                matches.append(match)
             }
         }
 
         // Dates with separators (length 6 to 10)
-        for i in 0..<(password.count - 5) {
-            for j in (i + 5)..<min(i + 10, password.count) {
-                let token = String(password[password.index(password.startIndex, offsetBy: i)..<password.index(password.startIndex, offsetBy: j + 1)])
-                if let maybeDateWithSeparatorPattern = maybeDateWithSeparatorPattern,
-                   let match = maybeDateWithSeparatorPattern.firstMatch(in: token, options: [], range: NSRange(location: 0, length: token.count)),
-                   let dmy = matchingHelpers.mapIntsToDateComponents([
-                    Int(token[Range(match.range(at: 1), in: token)!]) ?? 0,
-                    Int(token[Range(match.range(at: 3), in: token)!]) ?? 0,
-                    Int(token[Range(match.range(at: 4), in: token)!]) ?? 0
-                   ]) {
-                    let separator = String(token[Range(match.range(at: 2), in: token)!])
-                    let newMatch = Match(i: i, j: j, token: token)
-                    newMatch.pattern = "date"
-                    newMatch.separator = separator
-                    newMatch.year = dmy.year
-                    newMatch.month = dmy.month
-                    newMatch.day = dmy.day
-                    matches.append(newMatch)
+        if password.count > 5 {
+            for i in 0..<(password.count - 5) {
+                for j in (i + 5)..<min(i + 10, password.count) {
+                    let token = String(password[password.index(password.startIndex, offsetBy: i)..<password.index(password.startIndex, offsetBy: j + 1)])
+                    if let maybeDateWithSeparatorPattern = maybeDateWithSeparatorPattern,
+                       let match = maybeDateWithSeparatorPattern.firstMatch(in: token, options: [], range: NSRange(location: 0, length: token.count)),
+                       let dmy = matchingHelpers.mapIntsToDateComponents([
+                        Int(token[Range(match.range(at: 1), in: token)!]) ?? 0,
+                        Int(token[Range(match.range(at: 3), in: token)!]) ?? 0,
+                        Int(token[Range(match.range(at: 4), in: token)!]) ?? 0
+                       ]) {
+                        let separator = String(token[Range(match.range(at: 2), in: token)!])
+                        let newMatch = Match(i: i, j: j, token: token)
+                        newMatch.pattern = "date"
+                        newMatch.separator = separator
+                        newMatch.year = dmy.year
+                        newMatch.month = dmy.month
+                        newMatch.day = dmy.day
+                        matches.append(newMatch)
+                    }
                 }
             }
         }
