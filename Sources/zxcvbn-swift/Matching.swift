@@ -27,7 +27,8 @@ class Matching {
         }
     }
 
-    func omnimatch(password: String ) -> [Match] {
+    func omnimatch(password: String, rankedDictionaries: [String: [String: Int]]? = nil) -> [Match] {
+        let rankedDictionaries = rankedDictionaries ?? self.rankedDictionaries
         var matches: [Match] = []
         let matchers: [(String, [String: [String: Int]]) -> [Match]] = [
             dictionaryMatch,
