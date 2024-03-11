@@ -411,10 +411,3 @@ class Scoring {
         return optimalMatchSequence
     }
 }
-
-struct MostGuessableMatchSequenceResult {
-    var password: String
-    var guesses: Double
-    var guessesLog10: Double
-    var sequence: [Match]
-}
