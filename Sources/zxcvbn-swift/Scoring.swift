@@ -367,7 +367,6 @@ class Scoring {
         let match = makeBruteforceMatch(i: 0, j: k, password: password)
         update(match: match, l: 1, optimal: optimal, password: password, excludeAdditive: excludeAdditive)
         guard k >= 1 else { 
-            print("k is less than 1")
             return 
         }
         for i in 1...k {
