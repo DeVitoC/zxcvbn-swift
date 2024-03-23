@@ -8,29 +8,29 @@
 import Foundation
 
 public struct MostGuessableMatchSequenceResult {
-    var password: String
-    var guesses: Double
-    var guessesLog10: Double
+    public var password: String
+    public var guesses: Double
+    public var guessesLog10: Double
     var sequence: [Match]
-    var feedback: [String: [String]]?
-    var calcTime: TimeInterval?
-    var crackTimesSeconds: CrackTimesSeconds?
-    var crackTimesDisplay: CrackTimesDisplay?
-    var score: Int?
+    public var feedback: [String: [String]]?
+    public var calcTime: TimeInterval?
+    public var crackTimesSeconds: CrackTimesSeconds?
+    public var crackTimesDisplay: CrackTimesDisplay?
+    public var score: Int?
 }
 
 public struct CrackTimesSeconds {
-    var onlineThrottling100PerHour: Double
-    var onlineNoThrottling10PerSecond: Double
-    var offlineSlowHashing1e4PerSecond: Double
-    var offlineFastHashing1e10PerSecond: Double
+    public var onlineThrottling100PerHour: Double
+    public var onlineNoThrottling10PerSecond: Double
+    public var offlineSlowHashing1e4PerSecond: Double
+    public var offlineFastHashing1e10PerSecond: Double
 }
 
 public struct CrackTimesDisplay {
-    var onlineThrottling100PerHour: String!
-    var onlineNoThrottling10PerSecond: String!
-    var offlineSlowHashing1e4PerSecond: String!
-    var offlineFastHashing1e10PerSecond: String!
+    public var onlineThrottling100PerHour: String!
+    public var onlineNoThrottling10PerSecond: String!
+    public var offlineSlowHashing1e4PerSecond: String!
+    public var offlineFastHashing1e10PerSecond: String!
 
     init(onlineThrottling100PerHour: String,
          onlineNoThrottling10PerSecond: String,
