@@ -48,7 +48,7 @@ class TestCompatibility: XCTestCase {
     }
 
     func testCompatibility() throws {
-        let tests = TestValues().testValues
+        let tests = TestValues1().testValues
         let testsCount = tests.count
 
         var scoresCollision = 0
@@ -57,22 +57,7 @@ class TestCompatibility: XCTestCase {
         for testIndex in 0..<testsCount {
             let test = tests[testIndex]
 
-            let result = autoreleasepool { () -> (Int, Int) in 
-                let testResult = checkSection(test)
-                scoresCollision += testResult.0
-                guessesCollision += testResult.1
-
-                return testResult
-            }
-        }
-
-        let tests2 = TestValues().testValues
-        let testsCount2 = tests.count
-
-        for testIndex in 0..<testsCount2 {
-            let test = tests[testIndex]
-
-            let result = autoreleasepool { () -> (Int, Int) in
+            _ = autoreleasepool { () -> (Int, Int) in 
                 let testResult = checkSection(test)
                 scoresCollision += testResult.0
                 guessesCollision += testResult.1
@@ -91,4 +76,6 @@ class TestCompatibility: XCTestCase {
     private func printFailure(_ test: [String: Any], _ result: MostGuessableMatchSequenceResult) {
         print("========================================= expected: \(test) results: \(result)")
     }
+
+    
 }

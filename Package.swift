@@ -25,7 +25,7 @@ let package = Package(
             name: "zxcvbn-swiftTests",
             dependencies: ["zxcvbn-swift"],
             path: "Tests/zxcvbn-swiftTests",
-            sources: ["TestCompatibility.swift", "TestValues.swift"]
+            sources: ["TestCompatibility.swift", "TestValues1.swift"]
         )
     ]
 )
