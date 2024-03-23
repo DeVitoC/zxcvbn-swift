@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import zxcvbn_swift
+@testable import zxcvbn
 
 class TestCompatibility: XCTestCase {
     func checkSection(_ test: [String : Any]) -> (Int, Int) {

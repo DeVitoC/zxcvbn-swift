@@ -1,5 +1,5 @@
 import XCTest
-@testable import zxcvbn_swift
+@testable import zxcvbn
 
 class TimeEstimatesTests: XCTestCase {
     var timeEstimates: TimeEstimates!

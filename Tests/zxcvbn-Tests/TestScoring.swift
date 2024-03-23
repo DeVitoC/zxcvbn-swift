@@ -1,5 +1,5 @@
 import XCTest
-@testable import zxcvbn_swift
+@testable import zxcvbn
 
 let EPSILON = 1e-10 // truncate to 10th decimal place
 func truncateFloat(_ float: Double) -> Double {

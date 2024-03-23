@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import zxcvbn_swift
+@testable import zxcvbn
 
 final class TestMatching: XCTestCase {
     var matching: Matching!
