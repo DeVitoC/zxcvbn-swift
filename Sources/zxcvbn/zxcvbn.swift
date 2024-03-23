@@ -1,6 +1,6 @@
 import Foundation
 
-func zxcvbn(_ password: String, userInputs: [Any]? = nil) -> MostGuessableMatchSequenceResult {
+public func zxcvbn(_ password: String, userInputs: [Any]? = nil) -> MostGuessableMatchSequenceResult {
     var sanitizedInputs = [String]()
     let matching = Matching()
     let helpers = Helpers.shared

@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct MostGuessableMatchSequenceResult {
+public struct MostGuessableMatchSequenceResult {
     var password: String
     var guesses: Double
     var guessesLog10: Double
@@ -19,14 +19,14 @@ struct MostGuessableMatchSequenceResult {
     var score: Int?
 }
 
-struct CrackTimesSeconds {
+public struct CrackTimesSeconds {
     var onlineThrottling100PerHour: Double
     var onlineNoThrottling10PerSecond: Double
     var offlineSlowHashing1e4PerSecond: Double
     var offlineFastHashing1e10PerSecond: Double
 }
 
-struct CrackTimesDisplay {
+public struct CrackTimesDisplay {
     var onlineThrottling100PerHour: String!
     var onlineNoThrottling10PerSecond: String!
     var offlineSlowHashing1e4PerSecond: String!
